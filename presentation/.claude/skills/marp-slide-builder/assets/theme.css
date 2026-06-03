@@ -1,0 +1,105 @@
+/* @theme dtn
+ * DTN 발표용 Marp 테마 — 원안(GitHub-dark, 블루/그린 액센트) 복원판.
+ * 다크 캔버스(#0d1117) + 블루(#58a6ff)/그린(#3fb950) 액센트 + 우주/네트워크 톤.
+ * 강의자료는 영어이므로 Latin 폰트(Inter) + 코드/eyebrow는 JetBrains Mono.
+ * 사용: frontmatter `theme: dtn`, 빌드 시 `--theme-set .claude/skills/marp-slide-builder/assets/theme.css`
+ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --color-bg:      #0d1117;
+  --color-fg:      #e6edf3;
+  --color-accent:  #58a6ff;  /* blue */
+  --color-accent2: #3fb950;  /* green */
+  --color-muted:   #8b949e;
+  --color-card:    #161b22;
+  --color-line:    #30363d;
+  --color-code:    #ffa657;  /* orange */
+}
+
+section {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 26px;
+  line-height: 1.5;
+  padding: 60px 70px;
+}
+
+h1, h2, h3 { font-weight: 700; }
+h1 { color: var(--color-accent); font-size: 1.85em; line-height: 1.1; margin: 0 0 .3em; }
+h2 { color: var(--color-accent); font-size: 1.32em; border-bottom: 2px solid var(--color-accent); padding-bottom: .2em; margin: 0 0 .5em; }
+h3 { color: var(--color-accent2); font-size: 1.1em; font-weight: 600; }
+
+p, li { color: var(--color-fg); }
+strong { color: var(--color-accent2); font-weight: 600; }
+em { color: var(--color-code); font-style: normal; }
+a { color: var(--color-accent); }
+
+/* Eyebrow — 섹션/단계 위치 라벨 (mono, uppercase, 블루) */
+.eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: 10px;
+}
+
+/* Pill — CTA/태그 */
+.pill {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  color: var(--color-accent);
+  background: rgba(88, 166, 255, 0.08);
+  border: 1px solid var(--color-accent);
+  border-radius: 9999px;
+  padding: 5px 16px;
+}
+.pill-fill { background: var(--color-accent); color: var(--color-bg); border-color: var(--color-accent); }
+
+/* Cards — blockquote을 콜아웃 카드로 (좌측 그린 액센트 바) */
+blockquote {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-left: 4px solid var(--color-accent2);
+  border-radius: 8px;
+  padding: 16px 22px;
+  margin: 0.5em 0;
+  color: var(--color-fg);
+}
+
+/* Code */
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--color-card);
+  color: var(--color-code);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+}
+pre {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 8px;
+}
+pre code { background: transparent; color: var(--color-fg); padding: 0; }
+
+/* Tables */
+table { font-size: 0.85em; border-collapse: collapse; }
+th { background: var(--color-card); color: var(--color-accent); }
+td, th { border: 1px solid var(--color-line); padding: 8px 12px; }
+
+hr { border: none; border-top: 1px solid var(--color-line); }
+
+/* Lead (title/section) slides */
+section.lead { text-align: center; justify-content: center; }
+section.lead h1 { font-size: 2.4em; }
+section.lead h2 { border-bottom: none; }
+section.lead h3 { color: var(--color-muted); }
+
+/* Header / footer / page number */
+header, footer { color: var(--color-muted); font-size: 0.5em; }
+section::after { color: var(--color-muted); }

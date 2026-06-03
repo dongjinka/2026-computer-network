@@ -1,0 +1,19 @@
+# --- OS / editor cruft ---
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+*.swp
+*~
+.vscode/
+.idea/
+
+# --- Node (if Marp tooling is used) ---
+node_modules/
+npm-debug.log*
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# Note: src/ is a git submodule, so its build artifacts are not tracked by
+# this parent repo (the submodule's own .gitignore handles them).
