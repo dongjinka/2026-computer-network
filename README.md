@@ -28,6 +28,8 @@ This project shows how networking survives that world:
 
 ## Presentation
 
+**Live deck:** https://dongjinka.github.io/2026-computer-network/
+
 The full 15-minute talk lives in `presentation/`.
 
 | Format | File |

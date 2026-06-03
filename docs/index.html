@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Communication Under Extreme Delay &amp; Disruption — DTN</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<style>/* offline fallback — local Pretendard variable */
+@font-face{font-family:"Pretendard";font-weight:100 900;font-style:normal;font-display:swap;src:url("fonts/PretendardVariable.woff2") format("woff2-variations");}
+  /* team block (title slide) */
+  .team-k{ font-weight:600; font-size:var(--lab-sm); letter-spacing:.14em; text-transform:uppercase; color:var(--mute); margin:0 0 14px; }
+  .team-names{ font-weight:400; font-size:34px; letter-spacing:-.005em; color:var(--body); line-height:1.35; margin:0; font-variant-numeric:tabular-nums; }
+  /* table of contents */
+  .toc-item{ display:flex; align-items:baseline; gap:26px; padding:24px 0; border-bottom:1px solid var(--hair); }
+  .toc-n{ font-weight:600; font-size:var(--t-xs); color:var(--mute); font-variant-numeric:tabular-nums; min-width:64px; letter-spacing:.02em; }
+  .toc-t{ font-weight:400; font-size:var(--b-lg); color:var(--ink); margin:0; line-height:1.22; }
+</style>
+<style>
+  :root{
+    --canvas:#0a0a0a; --card:#191919; --soft:#1a1c20; --mid:#363a3f; --hair:#2a2c30;
+    --ink:#ffffff; --body:#dadbdf; --mute:#7d8187;
+    --sunset:#ff7a17; --sunset-soft:#ffc285; --dusk:#7c3aed; --twilight:#c4b5fd; --breeze:#a0c3ec;
+    --stop:#e0726b;
+    --t-xl:164px; --t-lg:116px; --t-md:86px; --t-sm:52px; --t-xs:38px;
+    --b-lg:36px; --b-md:31px; --b-sm:28px; --lab:25px; --lab-sm:23px; --metric:124px;
+    --mx:96px; --pt:80px; --pb:54px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; background:#000; }
+  deck-stage:not(:defined){ visibility:hidden; }
+
+  section{
+    background:var(--canvas); color:var(--ink);
+    font-family:"Pretendard","Pretendard Variable",sans-serif; font-weight:400;
+    padding:var(--pt) var(--mx) var(--pb);
+    display:flex; flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---- Header block ---- */
+  .eyebrow{ font-weight:600; font-size:var(--lab); letter-spacing:.16em; color:var(--mute); text-transform:uppercase; margin:0; }
+  .title{ font-weight:500; font-size:var(--t-md); line-height:1.02; letter-spacing:-.025em; margin:30px 0 0; min-height:182px; max-width:1620px; }
+  .subtitle{ font-weight:400; font-size:var(--b-lg); line-height:1.4; color:var(--body); margin:0; max-width:1180px; }
+  .head-rule{ height:1px; background:var(--hair); margin:24px 0 0; }
+  .body{ flex:1; min-height:0; margin-top:32px; display:flex; flex-direction:column; }
+
+  /* ---- Footer + progress strip ---- */
+  .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:22px; padding-top:16px; border-top:1px solid var(--hair);
+    font-weight:600; font-size:var(--lab-sm); letter-spacing:.1em; color:var(--mute); text-transform:uppercase; }
+  .footer .pg{ font-variant-numeric:tabular-nums; }
+  .strip{ display:flex; align-items:center; gap:0; }
+  .sdot{ width:30px; height:30px; border-radius:50%; border:1px solid var(--hair); display:flex; align-items:center; justify-content:center;
+    font-size:16px; font-weight:600; color:#54585e; letter-spacing:0; }
+  .sdot.on{ background:#fff; color:#0a0a0a; border-color:#fff; }
+  .sdot.done{ border-color:var(--mute); color:var(--body); }
+  .sdot.next{ border-color:var(--sunset); color:var(--sunset); }
+  .seg-line{ width:18px; height:1px; background:var(--hair); }
+
+  /* ---- Atoms ---- */
+  .pill{ display:inline-flex; align-items:center; gap:9px; border:1px solid rgba(255,255,255,.25); border-radius:9999px;
+    padding:9px 20px; font-size:var(--lab-sm); font-weight:500; color:var(--body); white-space:nowrap; }
+  .pill.solid{ background:#fff; color:#0a0a0a; border-color:#fff; font-weight:600; }
+  .pill.win{ border-color:rgba(255,122,23,.5); color:var(--sunset-soft); }
+  .pill.lose{ border-color:rgba(224,114,107,.5); color:var(--stop); }
+  .pill .dot{ width:8px; height:8px; border-radius:50%; background:var(--sunset); }
+  .pillrow{ display:flex; flex-wrap:wrap; gap:12px; }
+  .card{ background:var(--card); border:1px solid var(--hair); border-radius:8px; padding:26px 28px; }
+  .card .k{ font-weight:600; font-size:var(--lab-sm); letter-spacing:.12em; text-transform:uppercase; color:var(--mute); margin:0 0 12px; }
+  .card h3{ font-weight:400; font-size:var(--t-xs); letter-spacing:-.01em; margin:0 0 10px; line-height:1.12; }
+  .card p{ font-weight:400; font-size:var(--b-md); line-height:1.4; color:var(--body); margin:0; }
+  .card .em{ color:var(--ink); font-weight:500; }
+
+  .grid{ display:grid; gap:22px; flex:1; min-height:0; }
+  .c2{ grid-template-columns:1fr 1fr; }
+  .c3{ grid-template-columns:1fr 1fr 1fr; }
+  .c4{ grid-template-columns:repeat(4,1fr); }
+  .c5{ grid-template-columns:repeat(5,1fr); }
+  .fill{ flex:1; min-height:0; }
+
+  .snum{ display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:9999px;
+    border:1px solid rgba(255,255,255,.25); font-size:var(--b-md); color:var(--ink); font-weight:500; }
+
+  /* table */
+  table.cmp{ width:100%; border-collapse:collapse; font-size:var(--b-md); }
+  table.cmp th, table.cmp td{ text-align:left; padding:19px 22px; border-bottom:1px solid var(--hair); vertical-align:top; line-height:1.28; }
+  table.cmp thead th{ font-weight:600; font-size:var(--lab-sm); letter-spacing:.12em; text-transform:uppercase; color:var(--mute); }
+  table.cmp thead th.h-tcp{ color:var(--stop); }
+  table.cmp thead th.h-dtn{ color:var(--sunset-soft); }
+  table.cmp td.metricname{ color:var(--ink); font-weight:500; width:34%; }
+  table.cmp td.col-tcp{ color:var(--stop); }
+  table.cmp td.col-dtn{ color:var(--sunset-soft); }
+  table.cmp tr.key td{ border-bottom:none; font-weight:500; }
+  table.cmp tr.key td.metricname{ color:var(--ink); }
+  table.cmp tr.key td.col-tcp{ font-weight:600; }
+  table.cmp tr.key td.col-dtn{ font-weight:600; }
+
+  .metric{ font-weight:300; font-size:var(--metric); line-height:1; letter-spacing:-.02em; }
+  .metric.accent{ color:var(--sunset); }
+  .mcap{ font-weight:600; font-size:var(--lab-sm); letter-spacing:.1em; text-transform:uppercase; color:var(--mute); margin:14px 0 0; line-height:1.4; }
+
+  .band{ background:var(--card); border:1px solid var(--hair); border-radius:8px; padding:24px 30px; display:flex; align-items:center; gap:22px; }
+  .band .ql{ font-weight:400; font-size:var(--t-xs); line-height:1.25; color:var(--ink); margin:0; }
+
+  /* log block */
+  .log{ background:#0e0f12; border:1px solid var(--hair); border-radius:8px; padding:26px 28px; font-variant-numeric:tabular-nums;
+    display:flex; flex-direction:column; gap:14px; }
+  .log .ln{ display:grid; grid-template-columns:124px 100px 1fr; gap:16px; align-items:baseline; font-size:27px; line-height:1.3; }
+  .log .t{ color:var(--mute); font-weight:600; letter-spacing:.04em; }
+  .log .src{ color:var(--breeze); font-weight:500; }
+  .log .msg{ color:var(--body); }
+  .log .src.tcp{ color:var(--stop); }
+  .log .msg.die{ color:var(--stop); }
+  .log .msg.ok{ color:var(--sunset-soft); font-weight:500; }
+
+  /* diagram */
+  .node{ background:var(--card); border:1px solid var(--hair); border-radius:8px; padding:22px 26px; text-align:center; }
+  .node .lab{ font-weight:600; font-size:var(--lab-sm); letter-spacing:.12em; text-transform:uppercase; color:var(--mute); margin:0 0 8px; }
+  .node .nm{ font-size:var(--t-xs); font-weight:400; margin:0; }
+  .arrow{ display:flex; align-items:center; justify-content:center; color:var(--mute); position:relative; }
+  .arrow .line{ height:1px; background:var(--mute); flex:1; }
+  .arrow.delay .line{ background:var(--sunset); }
+  .arrow .head{ width:0;height:0;border-top:6px solid transparent;border-bottom:6px solid transparent;border-left:10px solid var(--mute); }
+  .arrow.delay .head{ border-left-color:var(--sunset); }
+  .arrow .cap{ position:absolute; top:-34px; left:50%; transform:translateX(-50%); white-space:nowrap;
+    font-weight:600; font-size:var(--lab-sm); letter-spacing:.08em; text-transform:uppercase; }
+  .arrow.delay .cap{ color:var(--sunset); }
+
+  .big-num{ font-weight:300; font-size:96px; line-height:1; letter-spacing:-.02em; }
+  .big-num.win{ color:var(--sunset); }
+  .big-num.lose{ color:var(--stop); }
+
+  .chips{ display:flex; flex-direction:column; gap:14px; }
+  .chip-line{ display:flex; align-items:baseline; gap:14px; font-size:var(--b-md); color:var(--body); line-height:1.34; }
+  .chip-line .lead-w{ color:var(--ink); font-weight:500; white-space:nowrap; }
+
+  /* title slide */
+  section.s-title{ justify-content:space-between; }
+  .s-title .hero{ font-weight:600; font-size:var(--t-xl); letter-spacing:-.04em; line-height:.92; margin:0; }
+  .s-title .hero-sub{ font-weight:400; font-size:var(--t-sm); letter-spacing:-.01em; color:var(--body); margin:18px 0 0; }
+  .s-title .hero-lead{ font-weight:400; font-size:var(--b-lg); line-height:1.45; color:var(--mute); margin:26px 0 0; max-width:760px; }
+
+  /* quote slide */
+  section.s-quote{ justify-content:center; }
+  .s-quote .qmark{ height:1px; width:120px; background:var(--hair); margin:0 0 40px; }
+  .s-quote .big{ font-weight:500; font-size:104px; line-height:1.12; letter-spacing:-.025em; margin:0; max-width:1620px; }
+  .s-quote .big .accent{ color:var(--sunset-soft); }
+  .s-quote .recap{ font-weight:400; font-size:var(--b-lg); line-height:1.5; color:var(--mute); margin:44px 0 0; max-width:1080px; }
+
+  /* refs */
+  .refgrid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 56px; flex:1; align-content:start; }
+  .ref{ display:grid; grid-template-columns:40px 1fr; gap:16px; padding:22px 0; border-bottom:1px solid var(--hair); }
+  .ref .n{ font-weight:600; font-size:var(--lab-sm); color:var(--mute); font-variant-numeric:tabular-nums; }
+  .ref .txt{ font-size:var(--b-md); line-height:1.42; color:var(--body); }
+  .ref .txt .src{ color:var(--mute); }
+
+  .stagecard{ display:flex; flex-direction:column; }
+  .stagecard .q{ font-size:var(--b-md); color:var(--ink); font-weight:500; line-height:1.25; margin:16px 0 0; }
+  .stagecard .a{ font-size:var(--b-sm); color:var(--mute); line-height:1.34; margin:auto 0 0; padding-top:16px; }
+  .stagecard .pill{ align-self:flex-start; margin-top:14px; }
+
+  .checkrow{ display:flex; gap:14px; align-items:flex-start; }
+  .checkrow .gd{ color:var(--sunset); font-weight:600; }
+  .checkrow .bd{ color:var(--mute); font-weight:600; }
+
+  /* entrance — transform-only so content is never held invisible by capture/print */
+  @media (prefers-reduced-motion:no-preference){
+    [data-deck-active] .eyebrow,[data-deck-active] .title,[data-deck-active] .subtitle,
+    [data-deck-active] .body,[data-deck-active] .hero,[data-deck-active] .hero-sub,
+    [data-deck-active] .hero-lead,[data-deck-active] .big,[data-deck-active] .recap{
+      animation:rise .5s cubic-bezier(.2,.7,.2,1) both;
+    }
+    [data-deck-active] .title{ animation-delay:.04s; }
+    [data-deck-active] .subtitle{ animation-delay:.08s; }
+    [data-deck-active] .body{ animation-delay:.12s; }
+  }
+  @keyframes rise{ from{ transform:translateY(12px); } to{ transform:none; } }
+</style>
+</head>
+<body>
+<deck-stage width="1920" height="1080" no-rail>
+
+  <!-- 1. TITLE -->
+  <section class="s-title" data-label="Title">
+    <div>
+      <h1 class="hero" style="font-size:112px;line-height:1.0;">Communication Under<br>Extreme Delay &amp; Disruption</h1>
+      <p class="hero-sub">Delay-Tolerant Networking (DTN)</p>
+      <p class="hero-lead">If you&rsquo;re cut off, hold the message &mdash; and forward it the moment you can.</p>
+    </div>
+    <div class="team">
+      <p class="team-k">Group 1 · Computer Networks 2026</p>
+      <p class="team-names">2022270624 가동진 &nbsp;·&nbsp; 2021270651 김재원 &nbsp;·&nbsp; 2023270614 박서준</p>
+    </div>
+  </section>
+
+  <!-- 1b. CONTENTS -->
+  <section data-label="Contents">
+    <h2 class="title">What we&rsquo;ll cover</h2>
+    <p class="subtitle">From an elevator glitch to an interplanetary network &mdash; in six steps.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2" style="align-content:center;grid-auto-flow:column;grid-template-rows:repeat(3,auto);gap:0 72px;">
+        <div class="toc-item"><span class="toc-n">01</span><p class="toc-t">The problem &mdash; why TCP/IP breaks</p></div>
+        <div class="toc-item"><span class="toc-n">02</span><p class="toc-t">The core idea &mdash; store, carry, forward</p></div>
+        <div class="toc-item"><span class="toc-n">03</span><p class="toc-t">Architecture &mdash; Bundle Protocol &amp; LTP</p></div>
+        <div class="toc-item"><span class="toc-n">04</span><p class="toc-t">Routing &amp; where it&rsquo;s flying</p></div>
+        <div class="toc-item"><span class="toc-n">05</span><p class="toc-t">Our demo &mdash; we ran ION-DTN</p></div>
+        <div class="toc-item"><span class="toc-n">06</span><p class="toc-t">By the numbers, limits &amp; wrap-up</p></div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">02 / 23</span></div>
+  </section>
+
+  <!-- 2. ELEVATOR -->
+  <section data-label="Elevator">
+    <h2 class="title">When your text won&rsquo;t send in an elevator</h2>
+    <p class="subtitle">The message wasn&rsquo;t lost. Your phone held it &mdash; and sent it when signal returned.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c3" style="flex:0 0 auto;">
+        <div class="card stagecard"><span class="snum">1</span><p class="q">Signal drops</p><p class="a">Send fails &mdash; no path right now.</p></div>
+        <div class="card stagecard"><span class="snum">2</span><p class="q">The phone holds it</p><p class="a">It queues the message and waits.</p></div>
+        <div class="card stagecard"><span class="snum">3</span><p class="q">Signal returns → it sends</p><p class="a">It forwards. Nothing was lost.</p></div>
+      </div>
+      <div class="band" style="margin-top:auto;">
+        <span class="pill"><span class="dot"></span>Store · Carry · Forward</span>
+        <p class="ql">That instinct has a name: <span style="color:var(--sunset-soft)">DTN</span>.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">03 / 23</span></div>
+  </section>
+
+  <!-- 3. MARS -->
+  <section data-label="Mars rover">
+    <h2 class="title">Now scale that glitch to Mars</h2>
+    <p class="subtitle">The same problem &mdash; blown up to the size of the solar system.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center;gap:34px;">
+          <div>
+            <p class="big-num" style="color:var(--body)">seconds</p>
+            <p class="mcap">Elevator &mdash; signal gone briefly</p>
+          </div>
+          <div class="head-rule" style="margin:0;"></div>
+          <div>
+            <p class="big-num win">3&ndash;22 min</p>
+            <p class="mcap">Mars &mdash; one-way delay · link down for hours</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;">
+            <p class="k">Why pick the hardest case</p>
+            <p style="font-size:var(--b-md);line-height:1.4;color:var(--body);margin:0;">Crack the Mars gap, and the deep sea, disaster zones, and remote areas come almost for free.</p>
+            <div class="pillrow" style="margin-top:20px;">
+              <span class="pill">NASA</span>
+              <span class="pill">Standardized &amp; flying</span>
+            </div>
+          </div>
+          <div class="band" style="border-color:rgba(224,114,107,.4);">
+            <p class="ql" style="font-size:var(--b-md);">TCP assumes an unbroken path &mdash; <span style="color:var(--stop)">right now</span>. On Mars, that breaks.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">04 / 23</span></div>
+  </section>
+
+  <!-- 4. ROADMAP -->
+  <section data-label="Roadmap">
+    <h2 class="title">One bundle. Earth → Mars. Five stages</h2>
+    <p class="subtitle">Each stage = a question + the tech that answers it.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c5">
+        <div class="card stagecard"><span class="snum">①</span><p class="q">Why does TCP break?</p><span class="pill" style="margin-top:auto;">4 broken assumptions</span></div>
+        <div class="card stagecard"><span class="snum">②</span><p class="q">Can&rsquo;t we just hold it?</p><span class="pill" style="margin-top:auto;">Store-carry-forward</span></div>
+        <div class="card stagecard"><span class="snum">③</span><p class="q">Who&rsquo;s responsible now?</p><span class="pill" style="margin-top:auto;">Custody transfer</span></div>
+        <div class="card stagecard"><span class="snum">④</span><p class="q">Reliable over minutes?</p><span class="pill" style="margin-top:auto;">LTP</span></div>
+        <div class="card stagecard"><span class="snum">⑤</span><p class="q">Which route, and when?</p><span class="pill" style="margin-top:auto;">Routing</span></div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">05 / 23</span></div>
+  </section>
+
+  <!-- 5. STAGE 1 BACKGROUND -->
+  <section data-label="Long delay">
+    <h2 class="title">It&rsquo;s not slow internet &mdash; it&rsquo;s broken physics</h2>
+    <p class="subtitle">Four physical realities, none of which TCP was built for.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c4" style="flex:0 0 auto;">
+        <div class="card"><p class="k">Delay</p><h3>Long &amp; variable</h3></div>
+        <div class="card"><p class="k">Disruption</p><h3>Links keep dropping</h3></div>
+        <div class="card"><p class="k">Capacity</p><h3>Asymmetric</h3></div>
+        <div class="card"><p class="k">Loss</p><h3>Physical, not congestion</h3></div>
+      </div>
+      <div class="band" style="margin-top:auto;">
+        <p class="ql" style="font-size:var(--b-md);">Each one breaks an assumption TCP was built on.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">06 / 23</span></div>
+  </section>
+
+  <!-- 6. TCP ASSUMPTIONS COLLAPSE -->
+  <section data-label="TCP breaks">
+    <h2 class="title">Every TCP assumption breaks out here</h2>
+    <p class="subtitle">Each reality collides with something TCP takes for granted.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <table class="cmp">
+        <thead><tr><th style="width:38%">TCP assumes…</th><th>…and in space it collapses</th></tr></thead>
+        <tbody>
+          <tr><td class="metricname">A continuous path</td><td>Handshake never completes.</td></tr>
+          <tr><td class="metricname">Short, stable RTT</td><td>ACKs too late &mdash; window can&rsquo;t grow.</td></tr>
+          <tr><td class="metricname">Timeout = loss</td><td>Re-sends good data &mdash; wastes bandwidth.</td></tr>
+          <tr class="key"><td class="metricname" style="color:var(--stop)">Loss = congestion</td><td style="color:var(--ink)">Backs off when a bit just flipped by radiation.</td></tr>
+        </tbody>
+      </table>
+      <div class="pillrow" style="margin-top:auto;">
+        <span class="pill solid">Not a faster TCP &mdash; a different premise</span>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">07 / 23</span></div>
+  </section>
+
+  <!-- 7. STORE AND SEND LATER -->
+  <section data-label="Store & custody">
+    <h2 class="title">Cut off? Hold it. Then forward it</h2>
+    <p class="subtitle">Start from the obvious instinct &mdash; then close the gap it leaves.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2" style="flex:0 0 auto;">
+        <div class="card">
+          <h3>Hold it, forward when the link returns</h3>
+          <p>Just like your phone in the elevator. But if the node dies &mdash; who&rsquo;s responsible?</p>
+        </div>
+        <div class="card">
+          <h3>A node signs for delivery &mdash; then it&rsquo;s theirs</h3>
+          <p>Like a courier depot relay. That sign-off is what separates DTN from plain caching.</p>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">08 / 23</span></div>
+  </section>
+
+  <!-- 8. BUNDLE PROTOCOL ARCHITECTURE -->
+  <section data-label="Bundle Protocol">
+    <h2 class="title">DTN adds one layer: the bundle layer</h2>
+    <p class="subtitle">It doesn&rsquo;t replace the network &mdash; it overlays one layer and swaps transport per segment.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div style="background:rgba(160,195,236,.08);border:1px solid var(--hair);border-radius:8px 8px 0 0;padding:16px 26px;text-align:center;">
+        <span style="font-weight:600;font-size:var(--lab-sm);letter-spacing:.14em;text-transform:uppercase;color:var(--breeze);">Bundle layer — unit of data is a bundle, not a packet</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 64px 1fr 64px 1fr;align-items:center;border:1px solid var(--hair);border-top:none;border-radius:0 0 8px 8px;padding:34px 26px;flex:1;">
+        <div class="node"><p class="lab">Sender</p><p class="nm">Earth</p></div>
+        <div class="arrow"><div class="line"></div><div class="head"></div><span class="cap" style="color:var(--mute)">TCP</span></div>
+        <div class="node"><p class="lab">Relay</p><p class="nm">Store &amp; forward</p></div>
+        <div class="arrow delay"><div class="line"></div><div class="head"></div><span class="cap">LTP</span></div>
+        <div class="node"><p class="lab">Receiver</p><p class="nm">Mars</p></div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">09 / 23</span></div>
+  </section>
+
+  <!-- 9. LTP -->
+  <section data-label="LTP">
+    <h2 class="title">TCP can&rsquo;t ride the space link. LTP can</h2>
+    <p class="subtitle">LTP = Licklider Transmission Protocol, named for an internet pioneer.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;">
+          <p class="k">Idea 1 — Red &amp; green data</p>
+          <h3>Split what must arrive from what can drop</h3>
+          <div style="display:flex;height:54px;border-radius:6px;overflow:hidden;margin:20px 0 14px;border:1px solid var(--hair);">
+            <div style="flex:2;background:var(--sunset);display:flex;align-items:center;justify-content:center;color:#0a0a0a;font-weight:600;font-size:18px;letter-spacing:.04em;white-space:nowrap;">RED — MUST ARRIVE</div>
+            <div style="flex:1;background:var(--mid);display:flex;align-items:center;justify-content:center;color:var(--body);font-weight:600;font-size:18px;letter-spacing:.04em;white-space:nowrap;">GREEN — BEST EFFORT</div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
+          <p class="k">Idea 2 — Deferred ACKs</p>
+          <h3>Don&rsquo;t wait on ACKs &mdash; match them to the RTT</h3>
+          <p style="margin-top:8px;">Reliable transport, even at minute-scale delay.</p>
+          <div class="pillrow" style="margin-top:24px;">
+            <span class="pill">RFC 5326</span>
+            <span class="pill">Built for the space segment</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">10 / 23</span></div>
+  </section>
+
+  <!-- 10. MID RECAP -->
+  <section data-label="Recap">
+    <h2 class="title">It arrives &mdash; even with no end-to-end path</h2>
+    <p class="subtitle">Filling the gaps, one at a time.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c3" style="flex:0 0 auto;">
+        <div class="card"><h3 style="color:var(--sunset)">Store-and-carry</h3><p>We don&rsquo;t have to wait.</p></div>
+        <div class="card"><h3 style="color:var(--sunset)">Custody</h3><p>Responsibility carries forward.</p></div>
+        <div class="card"><h3 style="color:var(--sunset)">LTP</h3><p>Reliable on the space link.</p></div>
+      </div>
+      <div class="band" style="margin-top:auto;">
+        <p class="ql">One question left &mdash; <span style="color:var(--sunset-soft)">which route, and when?</span></p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">11 / 23</span></div>
+  </section>
+
+  <!-- 11. ROUTING -->
+  <section data-label="Routing">
+    <h2 class="title">Know the future, or bet on who you meet</h2>
+    <p class="subtitle">Two branches &mdash; by how predictable the network is.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card" style="display:flex;flex-direction:column;">
+          <p class="k">Predictable — e.g. space</p>
+          <h3>CGR — Contact Graph Routing</h3>
+          <p>Orbits are predictable, so it <span class="em">precomputes when each link opens</span> from a contact plan.</p>
+          <span class="pill" style="margin-top:auto;align-self:flex-start;">Contact plan, computed ahead</span>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;">
+          <p class="k">Unpredictable — e.g. disaster nets</p>
+          <h3>Opportunistic routing</h3>
+          <p>Spray copies onto whoever you run into.</p>
+          <div style="display:flex;flex-direction:column;gap:12px;margin-top:18px;">
+            <div class="checkrow"><span class="bd">Epidemic</span><span style="color:var(--body);font-size:var(--b-sm);">— spray to all: high delivery, huge overhead.</span></div>
+            <div class="checkrow"><span class="gd">Spray-and-Wait</span><span style="color:var(--body);font-size:var(--b-sm);">— capped copies, balanced.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">12 / 23</span></div>
+  </section>
+
+  <!-- 12. RUNNING IN SPACE -->
+  <section data-label="In space">
+    <h2 class="title">This isn&rsquo;t theory. It&rsquo;s flying</h2>
+    <p class="subtitle">Already running in space &mdash; and reaching back down to Earth.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--hair);border-radius:8px;overflow:hidden;flex:0 0 auto;">
+        <div style="padding:24px 26px;border-right:1px solid var(--hair);"><p class="k" style="color:var(--breeze)">2008</p><p style="font-size:var(--b-md);margin:0;line-height:1.3;">DINET — first proven in space</p></div>
+        <div style="padding:24px 26px;border-right:1px solid var(--hair);"><p class="k" style="color:var(--breeze)">Today</p><p style="font-size:var(--b-md);margin:0;line-height:1.3;">ION (NASA JPL) runs on the ISS</p></div>
+        <div style="padding:24px 26px;"><p class="k" style="color:var(--breeze)">Ahead</p><p style="font-size:var(--b-md);margin:0;line-height:1.3;">LunaNet — DTN on the Moon</p></div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">13 / 23</span></div>
+  </section>
+
+  <!-- 13. WE RAN IT -->
+  <section data-label="We ran it">
+    <h2 class="title">We didn&rsquo;t just read about it. We ran it</h2>
+    <p class="subtitle">We verified all five stages in running code &mdash; on a regular laptop.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c3" style="flex:0 0 auto;">
+        <div class="card stagecard"><span class="snum">1</span><p class="q">Install ION-DTN</p><p class="a">NASA JPL, open source.</p><span class="pill">github.com/nasa-jpl/ion-dtn</span></div>
+        <div class="card stagecard"><span class="snum">2</span><p class="q">Fake the Mars delay</p><p class="a">Built-in owltsim.</p><span class="pill">owltsim</span></div>
+        <div class="card stagecard"><span class="snum">3</span><p class="q">Send into a dead link</p><p class="a">Watch it arrive.</p><span class="pill">&ldquo;Hello Mars&rdquo;</span></div>
+      </div>
+      <div class="band" style="margin-top:auto;background:var(--soft);">
+        <span class="pill"><span class="dot"></span>Demo-proof</span>
+        <p class="ql" style="font-size:var(--b-md);">Even if the live demo fails &mdash; a real execution-log capture backs it up.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">14 / 23</span></div>
+  </section>
+
+  <!-- 14. TEST IN ONE PICTURE -->
+  <section data-label="Test setup">
+    <h2 class="title">Two nodes. One fake Mars delay</h2>
+    <p class="subtitle">The smallest test that still shows a real end-to-end hop.</p>
+    <div class="head-rule"></div>
+    <div class="body" style="justify-content:center;gap:0;">
+      <div style="display:grid;grid-template-columns:1fr 120px 1fr;align-items:center;">
+        <div class="node" style="padding:30px;"><p class="lab">Sender</p><p class="nm">&ldquo;Earth&rdquo;</p></div>
+        <div class="arrow delay"><div class="line"></div><div class="head"></div><span class="cap">600 s one-way</span></div>
+        <div class="node" style="padding:30px;"><p class="lab">Receiver</p><p class="nm">&ldquo;Mars&rdquo;</p></div>
+      </div>
+      <p style="text-align:center;color:var(--sunset);font-weight:600;font-size:var(--lab-sm);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 40px;">owltsim injects the delay — Mars hears nothing for 600 s</p>
+      <div class="band">
+        <span class="pill"><span class="dot"></span>Store → hold → forward</span>
+        <p class="ql" style="font-size:var(--b-md);">At t = 0, &ldquo;Hello Mars&rdquo; is handed to Earth while the link is down &mdash; ION <span style="color:var(--ink)">stores, holds, and forwards</span>.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">15 / 23</span></div>
+  </section>
+
+  <!-- 15. OWLTSIM BOUNDED -->
+  <section data-label="owltsim">
+    <h2 class="title">owltsim: honest about what it fakes</h2>
+    <p class="subtitle">Does it mimic Mars, or just call sleep? Here&rsquo;s the line.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2" style="flex:0 0 auto;">
+        <div class="card" style="border-color:rgba(160,195,236,.35);">
+          <p class="k" style="color:var(--breeze)">Models — the timing</p>
+          <p style="font-size:var(--b-md);line-height:1.4;color:var(--body);margin:0;">Holds every signal exactly 600 s. Models the <span class="em" style="color:var(--ink)">delay length</span> and the <span class="em" style="color:var(--ink)">link drop &amp; return</span>.</p>
+        </div>
+        <div class="card">
+          <p class="k">Does NOT model — the physics</p>
+          <p style="font-size:var(--b-md);line-height:1.4;color:var(--body);margin:0;">No RF channel, antenna, or radiation bit errors. <span class="em" style="color:var(--ink)">Not a physics simulator.</span></p>
+        </div>
+      </div>
+      <div class="band" style="margin-top:auto;">
+        <span class="pill solid">Why it&rsquo;s credible</span>
+        <p class="ql" style="font-size:var(--b-md);">Store-carry-forward runs in <span style="color:var(--sunset-soft)">ION&rsquo;s real code</span> &mdash; not simulated. owltsim only feeds the delay.</p>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">16 / 23</span></div>
+  </section>
+
+  <!-- 16. THE RUN -->
+  <section data-label="The run">
+    <h2 class="title">Sent into a dead link &mdash; it arrived 600 s later</h2>
+    <p class="subtitle">Receiver first, then send. Stored while disconnected → delivered intact.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="log" style="flex:0 0 auto;">
+        <div class="ln"><span class="t">t = 0</span><span class="src">[earth]</span><span class="msg">&ldquo;Hello Mars&rdquo; stored &mdash; link DOWN</span></div>
+        <div class="ln"><span class="t">t = 0</span><span class="src tcp">[tcp]</span><span class="msg die">connect() … timeout &mdash; TCP would quit here</span></div>
+        <div class="ln"><span class="t">t = 600 s</span><span class="src">[earth]</span><span class="msg">light-time elapsed → forwarding</span></div>
+        <div class="ln"><span class="t">t = 600 s</span><span class="src">[mars]</span><span class="msg ok">bundle delivered: &ldquo;Hello Mars&rdquo;</span></div>
+        <div class="ln"><span class="t">t = 600 s</span><span class="src">[mars]</span><span class="msg ok">custody OK &mdash; receiver accepted</span></div>
+      </div>
+      <div class="pillrow" style="margin-top:auto;align-items:center;">
+        <span class="pill lose">TCP: FAILS</span>
+        <span class="pill win">DTN: DELIVERS</span>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">17 / 23</span></div>
+  </section>
+
+  <!-- 17. TCP VS DTN TABLE -->
+  <section data-label="By the numbers">
+    <h2 class="title">TCP vs DTN &mdash; by the numbers</h2>
+    <p class="subtitle">12 min is an assumed middle value (range 3&ndash;22).</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <table class="cmp">
+        <thead><tr><th>Under a 12-min one-way delay</th><th class="h-tcp">TCP</th><th class="h-dtn">DTN</th></tr></thead>
+        <tbody>
+          <tr><td class="metricname">3-way handshake</td><td class="col-tcp">~36 min to connect</td><td class="col-dtn">Not needed</td></tr>
+          <tr><td class="metricname">On a broken link</td><td class="col-tcp">Dies, restarts, times out</td><td class="col-dtn">Stored, delivered later</td></tr>
+          <tr class="key"><td class="metricname">Delivery under disruption</td><td class="col-tcp">FAILS</td><td class="col-dtn">100% (after delay)</td></tr>
+        </tbody>
+      </table>
+      <div class="pillrow" style="margin-top:auto;">
+        <span class="pill solid">Not &ldquo;faster&rdquo; &mdash; a different premise</span>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">18 / 23</span></div>
+  </section>
+
+  <!-- 18. BDP -->
+  <section data-label="BDP">
+    <h2 class="title">BDP: too much data &ldquo;in flight&rdquo;</h2>
+    <p class="subtitle">Why TCP can&rsquo;t just keep the pipe full across a 24-min round trip.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
+          <p class="k">BDP = bandwidth × RTT</p>
+          <p class="metric accent">≈ 180 MB</p>
+          <p class="mcap">in flight at once &mdash; 1 Mbps × 24-min round trip</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;border-color:rgba(224,114,107,.35);">
+            <p class="k" style="color:var(--stop)">TCP</p>
+            <p style="font-size:var(--b-md);line-height:1.38;color:var(--body);margin:0;">Can&rsquo;t hold 180 MB un-ACKed → flow control paralyzed.</p>
+          </div>
+          <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;border-color:rgba(255,122,23,.35);">
+            <p class="k" style="color:var(--sunset-soft)">DTN</p>
+            <p style="font-size:var(--b-md);line-height:1.38;color:var(--body);margin:0;">Stores per hop → never &ldquo;all in flight.&rdquo;</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">19 / 23</span></div>
+  </section>
+
+  <!-- 19. LIMITATIONS -->
+  <section data-label="Limitations">
+    <h2 class="title">When NOT to use DTN</h2>
+    <p class="subtitle">Knowing where it loses is as much a part of understanding it as where it wins.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card" style="display:flex;flex-direction:column;justify-content:center;">
+          <p class="k">The costs</p>
+          <div style="display:flex;flex-direction:column;gap:18px;">
+            <div class="checkrow"><span class="bd">—</span><span style="color:var(--body);font-size:var(--b-md);line-height:1.35;"><span class="em" style="color:var(--ink)">Heavy storage burden</span> &mdash; nodes hold data long.</span></div>
+            <div class="checkrow"><span class="bd">—</span><span style="color:var(--body);font-size:var(--b-md);line-height:1.35;">Congestion control still <span class="em" style="color:var(--ink)">immature</span>.</span></div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:22px;">
+          <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;border-color:rgba(255,122,23,.35);">
+            <p class="k" style="color:var(--sunset-soft)">Use DTN</p>
+            <p style="font-size:var(--b-md);line-height:1.38;color:var(--body);margin:0;">No continuous path <span class="em" style="color:var(--ink)">+</span> large delay/disruption.</p>
+          </div>
+          <div class="card fill" style="display:flex;flex-direction:column;justify-content:center;">
+            <p class="k">Use TCP/IP</p>
+            <p style="font-size:var(--b-md);line-height:1.38;color:var(--body);margin:0;">Stable + low latency &mdash; DTN there is a net loss.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">20 / 23</span></div>
+  </section>
+
+  <!-- 19b. RESULTS & LIMITS -->
+  <section data-label="Results & limits">
+    <h2 class="title">What we proved &mdash; and where it stops</h2>
+    <p class="subtitle">Honest about both the wins and the caveats.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="grid c2">
+        <div class="card" style="display:flex;flex-direction:column;border-color:rgba(255,122,23,.35);">
+          <p class="k" style="color:var(--sunset-soft)">What we accomplished</p>
+          <div style="display:flex;flex-direction:column;gap:22px;margin-top:10px;">
+            <div class="checkrow"><span class="gd">&#10003;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">Walked one bundle Earth&rarr;Mars through all five stages.</span></div>
+            <div class="checkrow"><span class="gd">&#10003;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">Ran NASA&rsquo;s ION-DTN ourselves &mdash; delivered intact across a dead link.</span></div>
+            <div class="checkrow"><span class="gd">&#10003;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">Quantified it &mdash; TCP fails under disruption, DTN delivers 100% after the delay.</span></div>
+          </div>
+        </div>
+        <div class="card" style="display:flex;flex-direction:column;border-color:rgba(224,114,107,.35);">
+          <p class="k" style="color:var(--stop)">Limitations</p>
+          <div style="display:flex;flex-direction:column;gap:22px;margin-top:10px;">
+            <div class="checkrow"><span class="bd">&mdash;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">A small, representative demo &mdash; two nodes, one injected delay, not a real RF link.</span></div>
+            <div class="checkrow"><span class="bd">&mdash;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">owltsim models the timing, not the radio physics.</span></div>
+            <div class="checkrow"><span class="bd">&mdash;</span><span style="font-size:var(--b-md);line-height:1.35;color:var(--body);">No large-scale, security, or routing-at-scale testing.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">21 / 23</span></div>
+  </section>
+
+  <!-- 20. IN ONE SENTENCE -->
+  <section class="s-quote" data-label="In one sentence">
+    <div class="qmark"></div>
+    <p class="big">Internet assumes a path open <span style="color:var(--breeze)">now</span>.<br>
+DTN assumes a path that’ll open <span style="color:var(--sunset)">someday</span>.</p>
+    <p class="recap">Next time your text lands a second late, that’s the same instinct behind an interplanetary network.</p>
+  </section>
+
+  <!-- 21. SOURCES -->
+  <section data-label="Sources">
+    <h2 class="title">Sources</h2>
+    <p class="subtitle">Standards, implementations, and missions referenced throughout.</p>
+    <div class="head-rule"></div>
+    <div class="body">
+      <div class="refgrid">
+        <div class="ref"><span class="n">01</span><span class="txt">Bundle Protocol Version 7. <span class="src">IETF RFC 9171, 2022.</span></span></div>
+        <div class="ref"><span class="n">02</span><span class="txt">Licklider Transmission Protocol (LTP). <span class="src">IETF RFC 5326.</span></span></div>
+        <div class="ref"><span class="n">03</span><span class="txt">ION — Interplanetary Overlay Network. <span class="src">NASA JPL · github.com/nasa-jpl/ION-DTN.</span></span></div>
+        <div class="ref"><span class="n">04</span><span class="txt">DINET — first in-space DTN. <span class="src">NASA, 2008.</span></span></div>
+        <div class="ref"><span class="n">05</span><span class="txt">DSOC — Deep Space Optical Comms, Psyche. <span class="src">NASA, 2023.</span></span></div>
+        <div class="ref"><span class="n">06</span><span class="txt">CCSDS Bundle Protocol recommendations. <span class="src">CCSDS.</span></span></div>
+      </div>
+    </div>
+    <div class="footer"><span class="pg">23 / 23</span></div>
+  </section>
+
+</deck-stage>
+
+<script type="application/json" id="speaker-notes">
+[
+"Hi everyone. Before I even tell you our topic, a quick question. Have you ever tried to send a text in an elevator, watched it fail, and then the moment your signal came back, it suddenly sent? Most of us have. Hold onto that — that tiny everyday glitch is the doorway into everything we'll talk about today. Here's where we're going to take it.",
+"Here's the whole arc, in six steps. We start from that elevator glitch and the problem behind it — why the regular internet, TCP/IP, breaks. Then the core idea that fixes it: store, carry, forward. From there we build up the architecture — the Bundle Protocol and LTP — see how it's routed and where it's already flying, and then the part we're proudest of: a demo we ran ourselves on NASA's DTN software. We close with the numbers, the limits, and a one-sentence takeaway. So let's go back to that elevator.",
+"So why does that happen? The message was never actually lost. The instant you lost signal, your phone just held onto it and fired it off the moment the connection came back. You've probably seen the dramatic version after a disaster — a whole stack of texts landing at once, hours late. Same mechanism: store it, carry it, send it when you can. That simple instinct — if you're cut off, don't give up, just hold it and forward it later — has a name, and a whole field of networking is built on it. That's our topic: DTN, Delay-Tolerant Networking. Our team dug into how you make this work not just across an elevator, but across delays and outages so severe the ordinary internet flat-out quits. And to feel how severe that gets, let's push the idea to its limit.",
+"An elevator cuts you off for a few seconds. Now crank that same situation all the way up: a rover on Mars. The signal one-way takes minutes, and the link stays broken for hours at a time as the planets turn and orbits drift. And space isn't a random pick — it's the hardest case there is, and it's exactly where DTN is already built, standardized, and flying today, run by NASA. So if we can crack the Mars gap, easier cases like the deep sea or a disaster zone come almost for free. Here's the catch that makes Mars so brutal: the TCP/IP we use every day quietly assumes there's an unbroken path between sender and receiver right now. On Mars, that assumption just falls apart. So today's talk is really that elevator glitch — blown up to the size of the solar system. Let me show you how we'll get there.",
+"Here's the map. We split the journey of one piece of data — one bundle — from Earth to Mars into five stages: the problem, store-and-carry, responsibility, transport, and the path. For each stage we paired the question it asks with the technology that answers it. These five stages are the backbone of the rest of the talk, and at the very end we'll confirm all five at once with a demo we ran ourselves. So let's start at stage one — why TCP/IP breaks out here in the first place.",
+"So why does it break? Space isn't just slow internet — it breaks the physical assumptions TCP was built on. Four things are going on. First, long and variable delay: Earth to Mars one-way is about 3 to 22 minutes, so round-trip is 6 to 44 minutes. The short, stable RTT TCP counts on just doesn't exist. Second, links drop constantly as nodes orbit, so a full end-to-end path might never exist at any single moment — that's a network partition. Third, uplink and downlink differ wildly in capacity. And fourth — keep this one in mind — packet loss out here is physical: cosmic radiation, interference. It's not congestion. And these same four conditions are exactly what you find in disaster zones, the deep sea, and remote areas — so anything that survives space carries straight over to them. Now the key move: each of these four realities collides head-on with something TCP takes for granted. Let's line them up.",
+"So here's the line-up. TCP rests on four assumptions, and in space every one collapses — each against one of the realities we just listed. One: it assumes a continuous end-to-end path, but paths never open all at once, so even the 3-way handshake can't finish — the connection never forms. Two: it assumes a short, stable RTT so ACKs come back fast, but at minute-scale the ACKs arrive far too late, the congestion window can't grow, and utilization stays terrible with so much data left in flight un-acknowledged. Three: it treats a timeout as loss and retransmits, but here the data was fine, just slow — so TCP re-sends perfectly good data and burns scarce bandwidth. And four, the deep one: TCP treats any loss as congestion and slows down. But in space a bit just got flipped by radiation; nothing is congested. So TCP backs off at exactly the wrong moment — and throughput collapses. The takeaway isn't build a faster TCP — we need a fundamentally different premise. And the simplest version of that premise is something you already do every day.",
+"That different premise starts from the naive answer, and I'll say it out loud on purpose. If you're cut off, just hold it and send it later, right? And yeah — that's basically store-carry-forward. It's exactly what your phone did in the elevator: held the message, then forwarded it the moment the link came back. But a gap shows up right away. If the node holding the data powers off or dies, who's responsible now? The classic answer is custody transfer: a node formally takes on delivery responsibility — including retransmission — and hands it forward, node by node. Think of a courier depot relay: once the next depot signs off on the parcel, it's their responsibility from that point on, and the previous node can then free its own copy. That sign-off is exactly what separates this from plain caching. One honest footnote: this custody mechanism was core in the older Bundle Protocol v6; v7 moved it out of the core and leaves reliable handoff to a separate extension — but custody isn't gone, ION still implements it as an option, which is exactly why you'll see custody OK in our demo log later. The idea — responsibility carries forward — is what matters. There's still the question of which route and when, and we'll get to that at routing. But first: where do all these ideas actually live in the stack?",
+"So where do these ideas actually live? DTN doesn't rip out the network you already have — it lays one overlay layer on top, the bundle layer. On the left the sender, on the right the receiver. The unit of data is a bundle, not a packet — and a bundle carries its own metadata, where it's headed and when it expires, so any node can handle it on its own without a live session. Nodes are named with URI-like Endpoint IDs, not IP addresses, so a node keeps its identity even as it disconnects and moves. And because each segment of the journey behaves differently, a thin adapter — the convergence layer adapter, or CLA — bridges the bundle layer to whatever runs on each segment: a TCP convergence layer on the terrestrial side, LTP on the space side. The standard here is BPv7, RFC 9171, formalized in 2022. I just said LTP on the space side, so let's look at why that one exists.",
+"Since we can't use TCP on the space segment, that swap on the right needs a real alternative — and that's LTP. The name comes from Licklider, one of the pioneers of the internet. Two key ideas. First, it splits data into a red part that must arrive and a green part that can drop — and for the red part, retransmission is selective: only the segments actually lost are sent again, not the whole stream. Second, instead of waiting on ACKs immediately, it defers them to match the RTT — and it sends a large block as segments, reassembling the reliable part at the far end. Together, that's what makes reliable transport possible even under minute-scale delay. That's four stages down, so let me pause and pull them together before the last one.",
+"Quick recap before routing. We've been filling the gaps one at a time: the continuous-path assumption collapses, so store-and-carry means we don't have to wait, custody means responsibility carries forward, and LTP gives reliable transport on the space segment. And so what? The big deal is that the data eventually arrives even if the path is never fully open all at once. That leaves just one question — which route, and when do I send — and that's the last stage, routing.",
+"So which route, and when? It splits into two branches. Somewhere like space, where orbits are predictable, we use CGR, Contact Graph Routing — from the known schedule it builds a contact graph and runs a Dijkstra-like search over it, precomputing when each link opens and picking a route that still meets the deadline. On the flip side, somewhere like a disaster network, where you have no idea who you'll meet or when, we use opportunistic routing that sprays copies onto whoever you run into. Epidemic sprays to everyone, so delivery is high but overhead is huge, while Spray-and-Wait caps the number of copies to find a balance. And that predictable, contact-plan side isn't hypothetical — it's already flying.",
+"And it really is flying — DTN isn't just theory. NASA JPL's ION is the flagship implementation: first proven in space with the 2008 DINET experiment, and today it runs on the ISS. Looking ahead, the Moon's planned network — LunaNet — builds DTN in from the start. And the same machinery already reaches back down to Earth: disaster networks, underwater links, sensor networks. That's exactly the payoff of solving the hardest case first. That's the textbook path — and this is where our team goes one step further.",
+"And this is where our team breaks away from the other presentations. Most teams would wrap up right where that case list ended. We went one step further and actually verified those five stages in running code. Here's the plan in plain terms for the next three slides. One: we install ION-DTN, NASA JPL's open-source implementation — the same software family that flies in space — right there on GitHub at nasa-jpl slash ion-dtn. The open-source part is the whole point: this isn't a black box we're asking you to take on faith; anyone can download it and reproduce exactly what we did, and we did it on a regular laptop. Two: we use its built-in tool, owltsim, to fake the Earth-Mars light-speed delay. Three: we send one message across a link that's down and watch it survive and arrive. And one more thing — even if the live demo blows up in front of you, we've dropped an actual execution-log capture on a later slide, so the evidence holds no matter what. Let me show you the shape of the test first.",
+"So here's the whole experiment in one picture before we touch any commands. On the left, one node we're calling Earth, the sender. On the right, one node we're calling Mars, the receiver. Two nodes is the smallest setup that still shows a real end-to-end hop. Between them, owltsim injects a 600-second one-way delay — that's the orange arrow — so the Mars side physically can't hear a thing until 600 seconds have gone by. The bottom path is what matters: at time zero we hand a bundle called Hello Mars to the Earth node while the link is basically down, ION stores it, holds it, and the moment delivery becomes possible, forwards it on to Mars. That bottom loop — store, hold, forward — is the core idea happening in real code instead of on a slide. Keep this picture in mind for the next two slides: one explains what owltsim is, the other shows the actual run. So what exactly is that orange arrow?",
+"That orange arrow is owltsim, and before the demo I want to draw its boundary honestly — because the obvious question is coming, does owltsim really mimic Mars, or is it just calling sleep, and we'd rather answer it before someone asks. So here's the straight version. What owltsim is: a one-way light-time simulator whose whole job is to take the 600-second delay we set and hold every signal between our two nodes for exactly that long before letting it through. It turns Mars is light-minutes away into a single number we dial in on a laptop. What it genuinely models is the timing — how long the delay is, and the link dropping then coming back. What it does NOT model is the radio physics — the real RF channel, the antenna, bit errors from radiation. It's not a physics simulator, and we're not pretending it is. And here's the crucial distinction: the part that actually matters — store-carry-forward and the responsibility handoff — isn't simulated at all. That runs in ION's real code. owltsim just feeds in the delay; ION itself does the real storing, holding, and handing off. Drawing that line is exactly what makes the demo credible: the timing is real, the channel is faked, and we're telling you which is which. So let's run it.",
+"So here's the actual run — expectation versus reality. What we did: bring up the two nodes, switch on the 600-second one-way delay, and — order matters — start the receiver, bpsink, in the background first, then send with bpsource. Receiver-first, because the bundle will be waiting to deliver the moment the delay elapses, so the listener has to already be sitting there. What we expected: ordinary TCP, sent into a down link, dies right away and times out; DTN's promise is stored now, delivered later. And that's exactly what the log shows. At time zero, Hello Mars is stored because the link is down — the exact moment TCP would give up — and 600 seconds later, when the light-time elapses, ION forwards it, Hello Mars lands at the receiver, and custody is confirmed. That's the headline: store-carry-forward in real code — stored while disconnected, delivered intact the instant the link returned. Same disruption: TCP fails, DTN delivers — the living proof I promised earlier. Now let's put exact numbers on that gap.",
+"So the second differentiator turns that one log line into a full table of numbers. First, to be clear, 12 minutes is an assumed value — it ranges from 3 to 22 minutes depending on distance, so we just took a middle figure. At 12 minutes one-way, the round-trip is 24 minutes, and a 3-way handshake is 1.5 round-trips — three one-way trips — about 36 minutes. And if the link breaks anywhere in there, TCP's session dies, starts over from scratch, and eventually just times out. But the bottom row is the key one: the very owltsim demo we just saw — under the same disruption, TCP fails to deliver while DTN delivers 100% after the delay. So the demo and this table lock together on one screen. That's why DTN is faster is the wrong framing — the design premise is different is the accurate one. And there's one number underneath all this worth a quick look — why TCP can't even keep the pipe full across that delay.",
+"This is that number. BDP — bandwidth-delay product — is just bandwidth times round-trip delay. At 1 Mbps across a 24-minute round trip, you've got about 180 MB in flight at any given instant. TCP can't keep that much un-acknowledged sitting in its window, so flow control is basically paralyzed. DTN sidesteps it entirely: it stores per hop, so it's never in that everything-in-flight-at-once state. So even the throughput math points the same way. Now — just as important as where DTN wins is knowing where you should not use it.",
+"So, honestly: DTN is not a cure-all. Intermediate nodes hold data for a long time, so the storage burden is heavy, and congestion control is still pretty immature. The rule of thumb is simple — if there's no guaranteed continuous path and the delay or disruption is large, use DTN; if it's stable and low-latency like the regular internet, just use TCP/IP, where DTN would be a net loss. Knowing where to use it and, just as importantly, where not to — that's what real understanding looks like. That's DTN in general — so now let me be just as honest about our own work specifically.",
+"Quickly, then — what did we actually prove, and where does it stop? On the wins: we walked a single bundle from Earth to Mars through all five stages; we ran NASA's ION-DTN ourselves and watched it deliver intact across a dead link; and we quantified the gap — TCP fails under disruption, DTN delivers 100% once the delay passes. On the limits, just as plainly: this was a small, representative demo — two nodes and one injected delay, not a real RF link; owltsim models the timing, not the radio physics; and we didn't test it at scale, or for security, or for routing at scale. In short, we proved the mechanism — not the whole system. So let me bring the whole thing home in one sentence.",
+"So, one sentence: the internet assumes a path that's open now, and DTN assumes a path that'll open someday. What we did today was start from that elevator glitch, walk through the five stages, and then verify them by running ION-DTN ourselves. The core insight is that thanks to store-carry-forward and the responsibility handoff, data arrives even when the path is never open all at once — so it's not that it's slow, it's that the premise is different. And looking ahead, it's already operational in space, with research pushing it into terrestrial and 6G non-terrestrial networks too. So the next time your text fails in an elevator and lands a second later, you'll know there's a whole interplanetary network built on that same instinct. Thank you — happy to take questions.",
+"Breeze through the references here, or pull them up as backup during Q&A."
+]
+</script>
+
+<script>
+  (function(){
+    function buildStrips(){
+      var labels=['①','②','③','④','⑤'];
+      document.querySelectorAll('.strip[data-stage]').forEach(function(el){
+        var s=el.getAttribute('data-stage');
+        if(s==='none'){ el.style.visibility='hidden'; return; }
+        el.innerHTML='';
+        labels.forEach(function(g,i){
+          var n=i+1;
+          var d=document.createElement('span');
+          d.className='sdot';
+          d.textContent=g;
+          if(s==='all'){ d.classList.add('on'); }
+          else if(s==='recap'){ if(n<=4){ d.classList.add('done'); } if(n===5){ d.classList.add('next'); } }
+          else if(s.indexOf(String(n))!==-1){ d.classList.add('on'); }
+          el.appendChild(d);
+          if(i<4){ var ln=document.createElement('span'); ln.className='seg-line'; el.appendChild(ln); }
+        });
+      });
+    }
+    if(document.readyState==='loading'){ document.addEventListener('DOMContentLoaded', buildStrips); }
+    else { buildStrips(); }
+  })();
+</script>
+
+<script src="deck-stage.js"></script>
+</body>
+</html>
