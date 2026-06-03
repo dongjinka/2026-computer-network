@@ -1,9 +1,9 @@
-# 2026 Computer Networks Team Project Group1 
-
-## **Communication Under Extreme Delay & Disruption : Delay-Tolerant Networking**
-
 <div align="center">
   
+# 2026 Computer Networks Team Project Group1 
+
+**Communication Under Extreme Delay & Disruption : Delay-Tolerant Networking**
+
 [Overview](#overview) · [Presentation](#presentation) · [Reproduce the demo](#reproducing-the-demo) · [Structure](#repository-structure) · [Team](#team)
 
 </div>
