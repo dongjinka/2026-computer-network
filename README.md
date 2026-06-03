@@ -1,9 +1,9 @@
+# 2026 Computer Networks Team Project Group1 
+
+## **Communication Under Extreme Delay & Disruption : Delay-Tolerant Networking**
+
 <div align="center">
-
-# Communication Under Extreme Delay & Disruption
-
-**A 2026 Computer Networks team project on Delay-Tolerant Networking**
-
+  
 [Overview](#overview) · [Presentation](#presentation) · [Reproduce the demo](#reproducing-the-demo) · [Structure](#repository-structure) · [Team](#team)
 
 </div>
@@ -67,7 +67,7 @@ Then follow **[DEMO.md](DEMO.md)** to build ION and run the two-node, 600-second
 
 ## Team
 
-Group 1 — 2026 Computer Networks.
+2026 Computer Networks Group 1
 
 | Member | Focus | Key question |
 |--------|-------|--------------|
