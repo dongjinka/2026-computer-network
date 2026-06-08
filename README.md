@@ -76,10 +76,9 @@ The demo configs (two nodes, 600 s delay) are checked into [`demo/`](demo/). The
 ```
 2026-computer-network/
 ├── presentation/   Slides, research, Q&A prep, and the Marp source — our deliverables
-├── docs/           Self-contained web deck published to GitHub Pages (the Live deck)
+├── docs/           Web deck served by GitHub Pages (Deploy from a branch → main /docs)
 ├── demo/           ION demo configs for the two-node, 600 s delay test
 ├── src/            NASA JPL ION-DTN — git submodule, reference only
-├── .github/        GitHub Pages deploy workflow
 ├── DEMO.md         How to reproduce the ION-DTN demo
 ├── LICENSE         CC BY 4.0 (original materials)
 └── README.md
