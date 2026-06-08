@@ -39,7 +39,16 @@ flowchart LR
     S1 --> S2 --> S3 --> S4 --> S5
 ```
 
-Full walkthrough: the talk, and **[DEMO.md](DEMO.md)**.
+What the run actually shows — the payoff the arc builds to (full log and method in **[DEMO.md](DEMO.md)**):
+
+```
+[t=0s]    link down: TCP times out here; ION stores "Hello Mars"
+[t=600s]  delay elapsed: forwarded -> "Hello Mars" received (custody OK)
+```
+
+Under identical disruption TCP never delivers; DTN delivers intact once the link returns — not "faster," a different premise.
+
+Full walkthrough: the talk.
 
 ## Presentation
 
