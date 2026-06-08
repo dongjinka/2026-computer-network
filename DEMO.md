@@ -30,6 +30,11 @@ sudo ldconfig
 See `src/README.md` and `src/doc/` for build options and platform notes.
 
 ## 3. Run the demo: two nodes + a 600 s light-time delay
+The config files that drive this topology (node 1 = Earth, node 2 = Mars, owlt = 600 s) are
+checked into [`demo/`](demo/): `host1.rc`, `host2.rc`, `node1.ionconfig`, `node2.ionconfig`,
+and `owlt.config`. They are modeled directly on ION's own two-node IPN/LTP owltsim tests
+(`src/tests/issue-364-dtpc.ipn2`), so the syntax matches the pinned ION source.
+
 Conceptual recipe (as shown on the slides):
 ```bash
 ionstart -I host1.rc            # sending node (Earth)
@@ -38,9 +43,10 @@ owltsim  owlt.config            # inject one-way light-time delay (owlt = 600 s)
 bpsink   ipn:2.1 &              # receiver first (order matters)
 bpsource ipn:2.1 "Hello Mars"   # send the bundle
 ```
-`host1.rc`, `host2.rc`, and `owlt.config` were composed ad hoc for the live talk and are not
-checked into this repo. Rebuild the same topology (node 1 = Earth, node 2 = Mars, owlt = 600 s)
-from ION's example configs (`src/configs/`, `src/demos/`) and the `owltsim` usage.
+Running two ION nodes on one host needs per-node working directories and `ION_NODE_LIST_DIR`,
+exactly as ION's tests do — see [`demo/README.md`](demo/README.md) for the exact, copy-pasteable
+sequence and the port map. For two separate hosts, replace `127.0.0.1` in `owlt.config` and the
+`udplso` lines with the peer IPs.
 
 ## 4. Expected result
 | Time | TCP/IP | DTN (ION) |

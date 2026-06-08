@@ -1,0 +1,38 @@
+# ION node 1 = EARTH (sender, ipn:1) — combined ionstart -I configuration.
+# Models a single Earth<->Mars hop with a 600 s one-way light time.
+# Faithful to ION's own two-node IPN/LTP owltsim tests (src/tests/issue-364-dtpc.ipn2).
+#
+#   node 1 (Earth) udplso ----> 127.0.0.1:9113 (owltsim) --600 s--> node 2 udplsi (2113)
+#   node 1 (Earth) udplsi <---- 127.0.0.1:1113 <--600 s-- (owltsim) <---- node 2 udplso
+
+## begin ionadmin
+1 1 ./node1.ionconfig
+s
+m horizon +0
+a contact +1 +3600 1 2 100000
+a contact +1 +3600 2 1 100000
+a range   +1 +3600 1 2 600
+a range   +1 +3600 2 1 600
+## end ionadmin
+
+## begin ltpadmin
+1 10
+a span 2 2 2 1200 100000 1 'udplso 127.0.0.1:9113 230000'
+s 'udplsi 127.0.0.1:1113'
+## end ltpadmin
+
+## begin bpadmin
+1
+a scheme ipn 'ipnfw' 'ipnadminep'
+a endpoint ipn:1.0 q
+a endpoint ipn:1.1 q
+a endpoint ipn:1.2 q
+a protocol ltp
+a induct ltp 1 ltpcli
+a outduct ltp 2 ltpclo
+s
+## end bpadmin
+
+## begin ipnadmin
+a plan 2 ltp/2
+## end ipnadmin

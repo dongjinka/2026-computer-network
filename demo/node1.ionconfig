@@ -1,0 +1,8 @@
+# ION node-1 (Earth) low-level configuration.
+# Distinct wmKey/sdrName so two ION nodes can coexist on one host.
+wmKey 65281
+sdrName ion1
+wmSize 5000000
+configFlags 1
+heapWords 1000000
+pathName /tmp
