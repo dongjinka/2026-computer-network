@@ -46,9 +46,11 @@ What the run actually shows — the payoff the arc builds to (full log and metho
 [t=600s]  delay elapsed: forwarded -> "Hello Mars" received (custody OK)
 ```
 
-Under identical disruption TCP never delivers; DTN delivers intact once the link returns — not "faster," a different premise.
+Under identical network disruption, a TCP transfer never completes. 
 
-Full walkthrough: the talk.
+DTN holds the data and delivers it intact once the link returns. 
+
+The point is that it's a different premise about connectivity.
 
 ## Presentation
 
